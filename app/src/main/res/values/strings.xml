@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Compteur</string>
+    <string name="veuillez_entrer_une_valeur_limite">Veuillez entrer une valeur limite</string>
+    <string name="veuillez_entrer_une_valeur_initiale">Veuillez entrer une valeur initiale</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
