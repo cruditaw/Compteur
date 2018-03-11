@@ -1,11 +1,5 @@
 package com.example.cdsm.compteur;
 
-import android.util.Log;
-
-/**
- * Created by cdsm on 2/14/18.
- */
-
 public class CompteurADAL {
 
     private CompteurADSL compteur;
@@ -26,9 +20,8 @@ public class CompteurADAL {
         lampe = new Lampe();
     }
 
-
     public void resetCompteur() {
-        lampe.setEtatLampe(false);
+        lampe.eteintLampe();
         compteur.reset();
     }
 

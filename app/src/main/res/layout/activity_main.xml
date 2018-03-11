@@ -1,119 +1,182 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:weightSum="2"
     tools:context="com.example.cdsm.compteur.MainActivity">
 
     <LinearLayout
+        android:id="@+id/inCL"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:gravity="center"
-        android:weightSum="5">
+        android:orientation="vertical"
+        app:layout_constraintVertical_chainStyle="spread"
+        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnsCL"
+        android:weightSum="2"
+        app:layout_constraintBottom_toTopOf="@id/btnsCL"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" >
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/veuillez_entrer_une_valeur_limite" />
-
-        <EditText
-            android:id="@+id/etCptLimit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/veuillez_entrer_une_valeur_initiale" />
-
-        <EditText
-            android:id="@+id/etCptStartVal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="" />
-
-        <Switch
-            android:id="@+id/swLampe"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:textOn="ALLUME"
-            android:textOff="ETEINT"/>
+            android:gravity="center"
+            android:orientation="vertical"
+            android:weightSum="2">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/veuillez_entrer_une_valeur_limite"/>
+
+            <EditText
+                android:id="@+id/etCptLimit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="80dp"
+                android:layout_marginRight="80dp"
+                android:layout_weight="1"
+                android:text=""/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:weightSum="2">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingTop="15dp"
+                android:text="@string/veuillez_entrer_une_valeur_initiale"/>
+
+            <EditText
+                android:id="@+id/etCptStartVal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="80dp"
+                android:layout_marginRight="80dp"
+                android:layout_weight="1"
+                android:text=""/>
+        </LinearLayout>
 
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/btnsCL"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
         android:gravity="center"
-        android:layout_weight="1"
-        android:weightSum="4">
+        android:orientation="horizontal"
+        android:weightSum="4"
+        app:layout_constraintVertical_chainStyle="spread"
+        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintEnd_toStartOf="@id/resCL"
+        app:layout_constraintBottom_toTopOf="@id/resCL"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inCL">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="horizontal"
-            android:weightSum="2">
+            android:text="@string/start"/>
 
-            <Button
-                android:id="@+id/btnStart"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Start" />
+        <Button
+            android:id="@+id/btnPause"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/pause"/>
 
-            <Button
-                android:id="@+id/btnReset"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Reset" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/btnResume"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/resume"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:gravity="center"
-            android:layout_weight="3">
-            <TextView
-                android:id="@+id/tvDigit3"
-                android:background="@drawable/digitshape"
-                android:textSize="60sp"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent" />
-            <TextView
-                android:id="@+id/tvDigit2"
-                android:background="@drawable/digitshape"
-                android:textSize="60sp"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent" />
-            <TextView
-                android:id="@+id/tvDigit1"
-                android:background="@drawable/digitshape"
-                android:textSize="60sp"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent" />
-            <TextView
-                android:id="@+id/tvDigit0"
-                android:background="@drawable/digitshape"
-                android:textSize="60sp"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/btnReset"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/reset"/>
+
     </LinearLayout>
 
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/resCL"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintVertical_chainStyle="spread"
+        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnsCL">
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/tvDigit3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/digitshape"
+            android:textSize="60sp"
+            app:layout_constraintEnd_toStartOf="@+id/tvDigit2"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@+id/tvDigit2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/digitshape"
+            android:textSize="60sp"
+            app:layout_constraintEnd_toStartOf="@+id/tvDigit1"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toEndOf="@+id/tvDigit3"/>
+
+        <TextView
+            android:id="@+id/tvDigit1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/digitshape"
+            android:textSize="60sp"
+            app:layout_constraintEnd_toStartOf="@+id/tvDigit0"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toEndOf="@+id/tvDigit2"/>
+
+        <TextView
+            android:id="@+id/tvDigit0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/digitshape"
+            android:textSize="60sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toEndOf="@+id/tvDigit1"
+            tools:layout_editor_absoluteY="0dp"/>
+    </android.support.constraint.ConstraintLayout>
+
+
+</android.support.constraint.ConstraintLayout>
