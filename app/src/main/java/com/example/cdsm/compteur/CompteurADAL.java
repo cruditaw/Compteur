@@ -22,6 +22,7 @@ public class CompteurADAL {
 
     public void resetCompteur() {
         lampe.eteintLampe();
+
         compteur.reset();
     }
 

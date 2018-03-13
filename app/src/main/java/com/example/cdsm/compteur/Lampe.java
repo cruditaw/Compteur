@@ -19,4 +19,5 @@ public class Lampe {
     public void eteintLampe() {
         etatLampe = false;
     }
+
 }

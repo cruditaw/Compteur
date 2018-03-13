@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnPause;
     private Button btnResume;
     private Button btnReset;
+    private ImageView ivLampe;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,12 +80,14 @@ public class MainActivity extends AppCompatActivity {
         btnPause = ((Button) findViewById(R.id.btnPause));
         etLimit = ((EditText) findViewById(R.id.etCptLimit));
         etStartVal = ((EditText) findViewById(R.id.etCptStartVal));
+        ivLampe = ((ImageView) findViewById(R.id.ivLampe));
 
         compteurPaused = false;
         compteurReseted = false;
         btnPause.setEnabled(false);
         btnResume.setEnabled(false);
         btnReset.setEnabled(false);
+        handleLampeDrawable();
 
         tvDigit0.setText(String.valueOf(0));
         tvDigit1.setText(String.valueOf(0));
@@ -103,14 +107,24 @@ public class MainActivity extends AppCompatActivity {
         compteurPaused = false;
         String start = String.valueOf(compteurALampe.getCompteur().getStart());
         String limit = String.valueOf(compteurALampe.getCompteur().getLimit());
-        initCompteur(limit, start);
-        timer.start();
-        btnPause.setEnabled(true);
-        btnResume.setEnabled(false);
+        if (Integer.valueOf(start) < Integer.valueOf(limit)) {
+            initCompteur(limit, start);
+            timer.start();
+            btnPause.setEnabled(true);
+            btnResume.setEnabled(false);
+        } else {
+            compteurALampe.getLampe().allumeLampe();
+            handleLampeDrawable();
+            btnPause.setEnabled(false);
+            btnResume.setEnabled(false);
+            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+            r.play();
+        }
     }
 
     private void handleStartClick() {
-        if (!handleInputErrors()) {
+        if (handleInputErrors()) {
             return;
         }
 
@@ -128,21 +142,21 @@ public class MainActivity extends AppCompatActivity {
     private boolean handleInputErrors() {
         if (etLimit.getText().toString().isEmpty()) {
             Toast.makeText(MainActivity.this, "La valeur de limite est necessaire !", Toast.LENGTH_LONG).show();
-            return false;
+            return true;
         } else {
             if (!etLimit.getText().toString().matches("[0-9]{1,4}")) {
                 Toast.makeText(MainActivity.this, "La valeur de limite est incorrecte !", Toast.LENGTH_LONG).show();
-                return false;
+                return true;
             }
         }
 
         if (!etStartVal.getText().toString().isEmpty()) {
             if (!etStartVal.getText().toString().matches("[0-9]{1,4}")) {
                 Toast.makeText(MainActivity.this, "La valeur de depart est incorrecte !", Toast.LENGTH_LONG).show();
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     private void handleResetClick() {
@@ -150,6 +164,8 @@ public class MainActivity extends AppCompatActivity {
         timer.cancel();
         compteurPaused = false;
         compteurReseted = true;
+        handleLampeDrawable();
+
         btnPause.setEnabled(false);
         btnResume.setEnabled(false);
         btnReset.setEnabled(false);
@@ -293,11 +309,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 compteurALampe.getLampe().allumeLampe();
-                handleResetClick();
+                handleLampeDrawable();
+                btnPause.setEnabled(false);
                 Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                 Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
                 r.play();
             }
         };
+    }
+
+    private void handleLampeDrawable() {
+        if (compteurALampe == null) {
+            ivLampe.setImageDrawable(getApplication().getResources().getDrawable(R.drawable.eteinte));
+        } else {
+            int drawRes = compteurALampe.getLampe().donneEtat() ? R.drawable.allumee : R.drawable.eteinte;
+            ivLampe.setImageDrawable(getApplication().getResources().getDrawable(drawRes));
+
+        }
     }
 }
