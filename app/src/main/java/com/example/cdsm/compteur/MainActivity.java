@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -23,8 +24,10 @@ public class MainActivity extends AppCompatActivity {
 
     private CompteurADAL compteurALampe;
     private CountDownTimer timer;
-    private boolean compteurPaused;
-    private boolean compteurReseted;
+    private boolean paused;
+    private boolean reseted;
+    private boolean running;
+    private boolean ended;
     private TextView tvDigit0;
     private TextView tvDigit1;
     private TextView tvDigit2;
@@ -36,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private Button btnResume;
     private Button btnReset;
     private ImageView ivLampe;
+    private Ringtone r;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initMainActivity();
+
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -82,12 +88,13 @@ public class MainActivity extends AppCompatActivity {
         etStartVal = ((EditText) findViewById(R.id.etCptStartVal));
         ivLampe = ((ImageView) findViewById(R.id.ivLampe));
 
-        compteurPaused = false;
-        compteurReseted = false;
         btnPause.setEnabled(false);
         btnResume.setEnabled(false);
         btnReset.setEnabled(false);
         handleLampeDrawable();
+
+        paused = false;
+        reseted = false;
 
         tvDigit0.setText(String.valueOf(0));
         tvDigit1.setText(String.valueOf(0));
@@ -96,7 +103,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handlePauseClick() {
-        compteurPaused = true;
+        reseted = false;
+        ended = false;
+        paused = true;
+        running = false;
         compteurALampe.getCompteur().pause();
         timer.cancel();
         btnPause.setEnabled(false);
@@ -104,7 +114,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleResumeClick() {
-        compteurPaused = false;
+        reseted = false;
+        ended = false;
+        paused = false;
+        running = true;
         String start = String.valueOf(compteurALampe.getCompteur().getStart());
         String limit = String.valueOf(compteurALampe.getCompteur().getLimit());
         if (Integer.valueOf(start) < Integer.valueOf(limit)) {
@@ -128,7 +141,10 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        compteurReseted = false;
+        reseted = false;
+        ended = false;
+        paused = false;
+        running = true;
         btnPause.setEnabled(true);
         btnResume.setEnabled(false);
         btnStart.setEnabled(false);
@@ -160,10 +176,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleResetClick() {
-        compteurALampe.resetCompteur();
-        timer.cancel();
-        compteurPaused = false;
-        compteurReseted = true;
+        if (compteurALampe != null) {
+            compteurALampe.resetCompteur();
+        }
+
+        if (timer != null) {
+            timer.cancel();
+        }
+
+        if (r != null) {
+            r.stop();
+        }
+
+        running = false;
+        paused = false;
+        reseted = true;
+        ended = false;
         handleLampeDrawable();
 
         btnPause.setEnabled(false);
@@ -176,18 +204,96 @@ public class MainActivity extends AppCompatActivity {
         tvDigit3.setText(String.valueOf(0));
     }
 
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        timer.cancel();
-        int compteurValue[] = makeDigitsFromCompteur();
-        String limit = String.valueOf(compteurALampe.getCompteur().getLimit());
-        String start = String.valueOf(compteurALampe.getCompteur().getCurrent());
-        outState.putIntArray("STATE_COMPTEUR", compteurValue);
-        outState.putInt("STATE_LIMIT", Integer.valueOf(limit));
-        outState.putInt("STATE_START", Integer.valueOf(start));
-        outState.putBoolean("STATE_PAUSE", compteurPaused);
-        outState.putBoolean("STATE_RESETED", compteurReseted);
+        if (timer != null) {
+            timer.cancel();
+        }
+
+        outState.putBoolean("STATE_PAUSE", paused);
+        outState.putBoolean("STATE_RESETED", reseted);
+        outState.putBoolean("STATE_FINISHED", ended);
+        outState.putBoolean("STATE_RUNNING", running);
+        outState.putBoolean("BTN_START", btnStart.isEnabled());
+        outState.putBoolean("BTN_PAUSE", btnPause.isEnabled());
+        outState.putBoolean("BTN_RESUME", btnResume.isEnabled());
+        outState.putBoolean("BTN_RESET", btnReset.isEnabled());
+
+        if (compteurALampe != null) {
+            int compteurValue[] = makeDigitsFromCompteur();
+            String limit = String.valueOf(compteurALampe.getCompteur().getLimit());
+            String start = String.valueOf(compteurALampe.getCompteur().getCurrent());
+            outState.putIntArray("STATE_COMPTEUR", compteurValue);
+            outState.putInt("STATE_LIMIT", Integer.valueOf(limit));
+            outState.putInt("STATE_START", Integer.valueOf(start));
+            outState.putBoolean("STATE_LAMPE", compteurALampe.getLampe().donneEtat());
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            int[] compteurValue = makeDigitsFromBundle(savedInstanceState);
+            String limit = String.valueOf(savedInstanceState.getInt("STATE_LIMIT"));
+            String start = String.valueOf(savedInstanceState.getInt("STATE_START"));
+            boolean lampe = savedInstanceState.getBoolean("STATE_LAMPE");
+            boolean cptState = savedInstanceState.getBoolean("STATE_FINISHED");
+            paused = savedInstanceState.getBoolean("STATE_PAUSE");
+            reseted = savedInstanceState.getBoolean("STATE_RESETED");
+            running = savedInstanceState.getBoolean("STATE_RUNNING");
+            ended = savedInstanceState.getBoolean("STATE_FINISHED");
+
+            initCompteur(limit, start);
+            btnStart.setEnabled(savedInstanceState.getBoolean("BTN_START"));
+            btnPause.setEnabled(savedInstanceState.getBoolean("BTN_PAUSE"));
+            btnResume.setEnabled(savedInstanceState.getBoolean("BTN_RESUME"));
+            btnReset.setEnabled(savedInstanceState.getBoolean("BTN_RESET"));
+
+            if (lampe) {
+                // compteurALampe.getLampe().allumeLampe();
+                ivLampe.setImageDrawable(getApplication().getResources().getDrawable(R.drawable.allumee));
+            } else {
+                // compteurALampe.getLampe().eteintLampe();
+                ivLampe.setImageDrawable(getApplication().getResources().getDrawable(R.drawable.eteinte));
+            }
+
+            if (ended) {
+                tvDigit0.setText(String.valueOf(compteurValue[0]));
+                tvDigit1.setText(String.valueOf(compteurValue[1]));
+                tvDigit2.setText(String.valueOf(compteurValue[2]));
+                tvDigit3.setText(String.valueOf(compteurValue[3]));
+                return;
+            }
+
+            if (reseted) {
+                tvDigit0.setText(String.valueOf(0));
+                tvDigit1.setText(String.valueOf(0));
+                tvDigit2.setText(String.valueOf(0));
+                tvDigit3.setText(String.valueOf(0));
+                return;
+            }
+
+            if (running) {
+                tvDigit0.setText(String.valueOf(compteurValue[0]));
+                tvDigit1.setText(String.valueOf(compteurValue[1]));
+                tvDigit2.setText(String.valueOf(compteurValue[2]));
+                tvDigit3.setText(String.valueOf(compteurValue[3]));
+                timer.start();
+                return;
+            }
+
+            if (paused) {
+                tvDigit0.setText(String.valueOf(compteurValue[0]));
+                tvDigit1.setText(String.valueOf(compteurValue[1]));
+                tvDigit2.setText(String.valueOf(compteurValue[2]));
+                tvDigit3.setText(String.valueOf(compteurValue[3]));
+                return;
+            }
+        }
     }
 
     private int[] makeDigitsFromCompteur() {
@@ -198,58 +304,17 @@ public class MainActivity extends AppCompatActivity {
         return compteurValue;
     }
 
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState != null) {
-            int[] compteurValue = makeDigitsFromBundle(savedInstanceState);
-            String limit = String.valueOf(savedInstanceState.getInt("STATE_LIMIT"));
-            String start = String.valueOf(savedInstanceState.getInt("STATE_START"));
-
-            compteurPaused = savedInstanceState.getBoolean("STATE_PAUSE");
-            compteurReseted = savedInstanceState.getBoolean("STATE_RESETED");
-            initCompteur(limit, start);
-            handleRestore(compteurValue);
-        }
-    }
 
     private int[] makeDigitsFromBundle(Bundle savedInstanceState) {
-        int compteurValue[] = new int[4];
-        for (int i = 0; i < 4; i++) {
-            compteurValue = savedInstanceState.getIntArray("STATE_COMPTEUR");
+        int compteurValue[] = new int[]{0, 0, 0, 0};
+        if (savedInstanceState.getIntArray("STATE_COMPTEUR") != null) {
+            for (int i = 0; i < 4; i++) {
+                compteurValue = savedInstanceState.getIntArray("STATE_COMPTEUR");
+            }
         }
         return compteurValue;
     }
 
-    private void handleRestore(int[] compteurValue) {
-        if (!compteurReseted) {
-            handleUnresetState(compteurValue);
-        } else {
-            tvDigit0.setText(String.valueOf(0));
-            tvDigit1.setText(String.valueOf(0));
-            tvDigit2.setText(String.valueOf(0));
-            tvDigit3.setText(String.valueOf(0));
-        }
-    }
-
-    private void handleUnresetState(int[] compteurValue) {
-        tvDigit0.setText(String.valueOf(compteurValue[0]));
-        tvDigit1.setText(String.valueOf(compteurValue[1]));
-        tvDigit2.setText(String.valueOf(compteurValue[2]));
-        tvDigit3.setText(String.valueOf(compteurValue[3]));
-        if (!compteurPaused) {
-            timer.start();
-            btnResume.setEnabled(false);
-            btnReset.setEnabled(true);
-            btnStart.setEnabled(false);
-            btnPause.setEnabled(true);
-        } else {
-            btnResume.setEnabled(true);
-            btnReset.setEnabled(true);
-            btnStart.setEnabled(false);
-            btnPause.setEnabled(false);
-        }
-    }
 
     private void initCompteur(String strLimit, String strStart) {
         int limit = checkInValue(strLimit);
@@ -258,10 +323,10 @@ public class MainActivity extends AppCompatActivity {
         if (start >= limit) {
             Toast.makeText(MainActivity.this, "La valeur de départ ne peut pas être superieur à la valeur limite .", Toast.LENGTH_LONG).show();
             return;
+        } else {
+            int nl = initCompteurADAL(limit, start);
+            initTimer(nl);
         }
-
-        int nl = initCompteurADAL(limit, start);
-        initTimer(nl);
     }
 
     private int checkInValue(String strValue) {
@@ -299,21 +364,35 @@ public class MainActivity extends AppCompatActivity {
         timer = new CountDownTimer(nl, 1000) {
             @Override
             public void onTick(long l) {
-                compteurALampe.getCompteur().increment();
-                tvDigit0.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[0].getValue()));
-                tvDigit1.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[1].getValue()));
-                tvDigit2.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[2].getValue()));
-                tvDigit3.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[3].getValue()));
+                if (!compteurALampe.getCompteur().increment()) {
+                    tvDigit0.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[0].getValue()));
+                    tvDigit1.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[1].getValue()));
+                    tvDigit2.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[2].getValue()));
+                    tvDigit3.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[3].getValue()));
+                } else {
+                    tvDigit0.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[0].getValue()));
+                    tvDigit1.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[1].getValue()));
+                    tvDigit2.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[2].getValue()));
+                    tvDigit3.setText(String.valueOf(compteurALampe.getCompteur().getDigitsTab()[3].getValue()));
+                    btnPause.setEnabled(false);
+
+
+                    ended = true;
+                    paused = false;
+                    running = false;
+                    reseted = false;
+
+                    compteurALampe.getLampe().allumeLampe();
+                    handleLampeDrawable();
+
+                    Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+                    r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+                    r.play();
+                }
             }
 
             @Override
             public void onFinish() {
-                compteurALampe.getLampe().allumeLampe();
-                handleLampeDrawable();
-                btnPause.setEnabled(false);
-                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
-                r.play();
             }
         };
     }
@@ -324,7 +403,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             int drawRes = compteurALampe.getLampe().donneEtat() ? R.drawable.allumee : R.drawable.eteinte;
             ivLampe.setImageDrawable(getApplication().getResources().getDrawable(drawRes));
-
         }
     }
 }

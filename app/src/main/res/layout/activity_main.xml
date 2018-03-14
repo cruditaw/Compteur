@@ -6,7 +6,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@drawable/appbackground"
     tools:context="com.example.cdsm.compteur.MainActivity">
+
+    <ImageView
+        android:id="@+id/ivLampe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxHeight="50dp"
+        android:maxWidth="50dp"
+        android:scaleType="centerInside"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"/>
 
     <LinearLayout
         android:id="@+id/inCL"
